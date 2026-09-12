@@ -3,7 +3,7 @@ import sys
 import os
 import re
 
-# Красивый ASCII баннер для CheckPDF
+# ASCII Banner for CheckPDF
 BANNER = r"""
   _____ _               _    ____  ____  _____ 
  /  __ \ |             | |  |  _ \|  _ \|  ___|
@@ -18,20 +18,20 @@ BANNER = r"""
 
 def extract_javascript(pdf_path, output_path=None):
     if not os.path.exists(pdf_path):
-        print(f"[-] Ошибка: Файл '{pdf_path}' не найден.")
+        print(f"[-] Error: File '{pdf_path}' not found.")
         sys.exit(1)
 
-    print(f"[*] Анализ файла: {pdf_path}")
+    print(f"[*] Analyzing file: {pdf_path}")
     
     with open(pdf_path, 'rb') as f:
         content = f.read()
 
-    # Поиск потенциальных JS-скриптов по спецификации PDF
+    # Search for potential JS scripts according to PDF specifications
     js_patterns = [
         re.compile(br'/JavaScript\s*<<([^>]+)>>'),
         re.compile(br'/JS\s*\((.*?)\)'),
         re.compile(br'/JS\s*<<([^>]+)>>'),
-        re.compile(br'/AA\s*<<([^>]+)>>') # Дополнительно ищем автоматические действия
+        re.compile(br'/AA\s*<<([^>]+)>>') # Automated actions trigger
     ]
 
     extracted_scripts = []
@@ -40,7 +40,6 @@ def extract_javascript(pdf_path, output_path=None):
         matches = pattern.findall(content)
         for match in matches:
             try:
-                # Очищаем от мусора и декодируем
                 script_text = match.decode('utf-8', errors='ignore').strip()
                 if script_text and script_text not in extracted_scripts:
                     extracted_scripts.append(script_text)
@@ -48,28 +47,27 @@ def extract_javascript(pdf_path, output_path=None):
                 continue
 
     if not extracted_scripts:
-        print("[+] Скриптов JavaScript или скрытых триггеров не обнаружено.")
+        print("[+] No JavaScript scripts or hidden triggers detected.")
         return
 
-    print(f"[!] Внимание! Найдено подозрительных объектов: {len(extracted_scripts)}")
+    print(f"[!] Warning! Suspicious objects found: {len(extracted_scripts)}")
     
     for i, script in enumerate(extracted_scripts, 1):
-        print(f"\n--- Скрипт #{i} ---")
+        print(f"\n--- Script #{i} ---")
         print(script)
         
         if output_path:
             out_file = f"{output_path}_script_{i}.js"
             with open(out_file, 'w', encoding='utf-8') as out:
                 out.write(script)
-            print(f"[+] Скрипт успешно выгружен в: {out_file}")
+            print(f"[+] Script successfully extracted to: {out_file}")
 
 def main():
-    # Выводим баннер сразу при запуске утилиты
     print(BANNER)
 
     if len(sys.argv) < 2:
-        print("Использование: checkpdf <путь_к_pdf> [префикс_для_сохранения]")
-        print("Пример: checkpdf sample.pdf extracted_js\n")
+        print("Usage: checkpdf <path_to_pdf> [output_prefix]")
+        print("Example: checkpdf sample.pdf extracted_js\n")
         sys.exit(1)
 
     pdf_path = sys.argv[1]
